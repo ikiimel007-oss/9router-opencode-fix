@@ -32,7 +32,11 @@ cd 9router-opencode-fix
 bash install.sh
 ```
 
-`install.sh` = apply patch + restart service + verifikasi `oc/deepseek-v4-flash-free`.
+`install.sh` = apply patch + restart service + verifikasi `oc/deepseek-v4-flash-free` **tanpa setting manual**:
+- API key otomatis dideteksi dari DB 9router (`~/.9router/db/data.sqlite`) atau opencode config
+- Base URL otomatis dideteksi dari opencode config (default `http://127.0.0.1:20128`)
+- apiKey/baseURL 9router otomatis disinkronkan ke `~/.config/opencode/opencode.jsonc`
+- Override opsional via env: `R9_API_KEY=... R9_BASE_URL=... bash install.sh`
 
 ### Manual
 
