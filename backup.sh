@@ -1,20 +1,16 @@
 #!/usr/bin/env bash
 # ============================================================
-# Backup konfigurasi 9router saat ini agar bisa di-restore
-# di VPS baru setelah install (langsung terpakai).
+# Backup konfigurasi 9router saat ini.
 #
-# Isi: DB 9router (apiKeys, model oc/*-free, settings),
-#      machine-id, jwt-secret, auth/cli-secret, opencode config.
-#
-# Hasil: backup/9router-config-<timestamp>.tar.gz (jangan di-commit,
-#        berisi API key instance). Pindahkan file ini ke VPS baru,
-#        taruh di folder repo, lalu jalankan install.sh.
+# Hasil: backup/9router-config.tar.gz  -> file tetap, siap di-commit
+#        & di-push ke GitHub (supaya di VPS baru tinggal clone).
+# Catatan: berisi API key + secrets 9router (repo harus private
+#        atau kamu sadar resikonya bila repo public).
 # ============================================================
 set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STAMP=$(date +%Y%m%d-%H%M%S)
-OUT="$SCRIPT_DIR/backup/9router-config-$STAMP.tar.gz"
+OUT="$SCRIPT_DIR/backup/9router-config.tar.gz"
 
 mkdir -p "$SCRIPT_DIR/backup"
 
@@ -26,5 +22,6 @@ tar -czf "$OUT" -C "$HOME" \
   .config/opencode/opencode.jsonc
 
 echo "Backup dibuat: $OUT"
-echo "Transfer ke VPS baru: scp $OUT <vps>:~/9router-opencode-fix/backup/"
+echo "Commit & push agar di VPS baru tinggal clone:"
+echo "  git add backup/9router-config.tar.gz && git commit -m 'update backup config' && git push"
 echo "Lalu di VPS baru: bash install.sh (otomatis restore)"

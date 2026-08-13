@@ -102,6 +102,7 @@ EOF
 restore_backup() {
   local bk=""
   bk=$(ls "$SCRIPT_DIR"/backup/9router-config-*.tar.gz 2>/dev/null | head -1)
+  [ -z "$bk" ] && [ -f "$SCRIPT_DIR/backup/9router-config.tar.gz" ] && bk="$SCRIPT_DIR/backup/9router-config.tar.gz"
   [ -z "$bk" ] && [ -f "$SCRIPT_DIR/9router-config.tar.gz" ] && bk="$SCRIPT_DIR/9router-config.tar.gz"
   if [ -z "$bk" ]; then
     echo "==> Tidak ada backup (backup/*.tar.gz). Lanjut setup baru."
