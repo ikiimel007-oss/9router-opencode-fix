@@ -27,8 +27,8 @@ Patch satu file `.../9router/app/.next-cli-build/server/chunks/318.js`:
 ### Di VPS baru — tinggal clone (konfigurasi 9router sudah termasuk di repo)
 
 ```bash
-git clone https://github.com/ikiimel007-oss/9router-opencode-fix.git
-cd 9router-opencode-fix
+git clone https://github.com/ikiimel007-oss/9r.git
+cd 9r
 bash install.sh
 ```
 
