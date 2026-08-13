@@ -94,9 +94,45 @@ EOF
     echo "         nohup bash $START_SCRIPT >/tmp/9router.log 2>&1 &"
     nohup bash "$START_SCRIPT" >/tmp/9router.log 2>&1 &
   fi
+}
 
-  echo "   Start 9router..."
-  systemctl restart 9router 2>/dev/null || nohup bash "$START_SCRIPT" >/tmp/9router.log 2>&1 &
+# ------------------------------------------------------------
+# Restore konfigurasi 9router dari backup (kalau ada)
+# ------------------------------------------------------------
+restore_backup() {
+  local bk=""
+  bk=$(ls "$SCRIPT_DIR"/backup/9router-config-*.tar.gz 2>/dev/null | head -1)
+  [ -z "$bk" ] && [ -f "$SCRIPT_DIR/9router-config.tar.gz" ] && bk="$SCRIPT_DIR/9router-config.tar.gz"
+  if [ -z "$bk" ]; then
+    echo "==> Tidak ada backup (backup/*.tar.gz). Lanjut setup baru."
+    return 1
+  fi
+
+  echo "==> Restore konfigurasi 9router dari $bk ..."
+  systemctl stop 9router 2>/dev/null || true
+  pkill -f custom-server.js 2>/dev/null || true
+  sleep 1
+  tar -xzf "$bk" -C "$HOME"
+
+  # pastikan baseURL 9router menunjuk host lokal di opencode config
+  python3 - "$OC_CONFIG" <<'EOF'
+import json, os, sys
+cfg = sys.argv[1]
+url = os.environ.get("R9_BASE_URL", "http://127.0.0.1:20128/v1")
+try:
+    d = json.load(open(cfg))
+    opts = d.get("provider", {}).get("9router", {}).get("options", {})
+    if opts.get("baseURL") != url:
+        opts["baseURL"] = url
+        with open(cfg, "w") as f:
+            json.dump(d, f, indent=2)
+            f.write("\n")
+        print(f"   baseURL 9router -> {url}")
+except Exception as e:
+    print(f"   WARN: baseURL tidak diupdate: {e}")
+EOF
+  echo "   Konfigurasi berhasil di-restore."
+  return 0
 }
 
 # ------------------------------------------------------------
@@ -161,6 +197,13 @@ EOF
 # Main
 # ------------------------------------------------------------
 ensure_9router || exit 1
+RESTORED="no"
+restore_backup && RESTORED="yes"
+
+# Start 9router (jika belum jalan)
+if ! systemctl is-active 9router >/dev/null 2>&1; then
+  systemctl start 9router 2>/dev/null || nohup bash "$START_SCRIPT" >/tmp/9router.log 2>&1 &
+fi
 
 # pastikan DB ada & punya API key (tunggu 9router generate)
 for _ in $(seq 1 30); do

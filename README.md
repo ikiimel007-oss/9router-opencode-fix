@@ -24,19 +24,40 @@ Patch satu file `.../9router/app/.next-cli-build/server/chunks/318.js`:
 
 ## Cara pakai
 
-### Di VPS baru (setelah install 9router)
+### Backup konfigurasi 9router saat ini (di VPS lama)
 
 ```bash
 git clone https://github.com/ikiimel007-oss/9router-opencode-fix.git
 cd 9router-opencode-fix
+bash backup.sh        # hasil: backup/9router-config-<timestamp>.tar.gz
+```
+
+Backup berisi DB 9router (API key, model, settings), machine-id, jwt-secret,
+auth/cli-secret, dan opencode config. **Folder `backup/` di-gitignore** (berisi
+API key) — transfer manual ke VPS baru:
+
+```bash
+scp backup/9router-config-*.tar.gz <vps>:~/9router-opencode-fix/backup/
+```
+
+### Di VPS baru (restore langsung terpakai)
+
+```bash
+git clone https://github.com/ikiimel007-oss/9router-opencode-fix.git
+cd 9router-opencode-fix
+# taruh backup/9router-config-*.tar.gz di folder ini, lalu:
 bash install.sh
 ```
 
-`install.sh` = apply patch + restart service + verifikasi `oc/deepseek-v4-flash-free` **tanpa setting manual**:
-- API key otomatis dideteksi dari DB 9router (`~/.9router/db/data.sqlite`) atau opencode config
-- Base URL otomatis dideteksi dari opencode config (default `http://127.0.0.1:20128`)
-- apiKey/baseURL 9router otomatis disinkronkan ke `~/.config/opencode/opencode.jsonc`
-- Override opsional via env: `R9_API_KEY=... R9_BASE_URL=... bash install.sh`
+`install.sh` otomatis:
+1. Install 9router (bila belum ada) + systemd service
+2. **Restore konfigurasi dari backup** (bila ada) — API key, model, settings, opencode config langsung terpakai
+3. Auto-detect API key / base URL; baseURL 9router otomatis diarahkan ke host lokal (`http://127.0.0.1:20128/v1`, override via `R9_BASE_URL`)
+4. Apply patch (UA rotation + retry 429)
+5. Verifikasi `oc/deepseek-v4-flash-free` → HTTP 200
+
+Tanpa backup, `install.sh` tetap jalan: membuat API key baru + model `oc/*-free` dari nol.
+Override opsional via env: `R9_API_KEY=... R9_BASE_URL=... bash install.sh`
 
 ### Manual
 
